@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio PnL — Reynaldo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+body { margin: 0; background: #0b0d12; padding: 24px 12px; }
+
+#pf-root {
+  --bg: #12151c;
+  --surface: #181d28;
+  --surface-2: #1f2531;
+  --border: #2a2f3d;
+  --text: #e8eaf0;
+  --text-dim: #8b92a5;
+  --text-faint: #565d70;
+  --accent: #d4a94a;
+  --gain: #4fbf7f;
+  --loss: #e0645a;
+  --warn: #e0a83a;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  border-radius: 14px;
+  padding: 28px 24px 32px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+#pf-root * { box-sizing: border-box; }
+#pf-root .mono { font-family: 'IBM Plex Mono', monospace; }
+
+/* ---------- Header ---------- */
+#pf-root .pf-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+#pf-root .pf-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: var(--text);
+}
+#pf-root .pf-sync {
+  font-size: 12px;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#pf-root .pf-refresh-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 7px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#pf-root .pf-refresh-btn:hover { border-color: var(--accent); color: var(--text); }
+#pf-root .pf-refresh-btn.spinning svg { animation: pf-spin 0.8s linear infinite; }
+@keyframes pf-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Hero ---------- */
+#pf-root .pf-hero {
+  background: linear-gradient(155deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 26px 28px;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+#pf-root .pf-hero-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+#pf-root .pf-hero-value {
+  font-family: 'Fraunces', serif;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+#pf-root .pf-hero-sub {
+  margin-top: 9px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+#pf-root .pf-hero-pnl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 3px 0;
+}
+#pf-root .pf-hero-right {
+  text-align: right;
+}
+#pf-root .pf-hero-right .pf-hero-label { text-align: right; }
+#pf-root .pf-modalbar {
+  width: 220px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-top: 10px;
+}
+#pf-root .pf-modalbar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ---------- Coin grid ---------- */
+#pf-root .pf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+#pf-root .pf-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 17px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+#pf-root .pf-card:hover { border-color: #3b4257; }
+#pf-root .pf-card.open { border-color: var(--accent); }
+#pf-root .pf-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+#pf-root .pf-card-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+#pf-root .pf-coin-logo-wrap {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: block;
+}
+#pf-root .pf-coin-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+#pf-root .pf-coin-logo-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #12151c;
+  flex: 0 0 auto;
+}
+#pf-root .pf-coin-logo-wrap .pf-coin-logo-fallback {
+  position: absolute;
+  top: 0; left: 0;
+}
+#pf-root .pf-chg-badge {
+  display: inline-block;
+  margin-top: 3px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+#pf-root .pf-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+#pf-root .pf-sort-select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  border-radius: 7px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+#pf-root .pf-alloc {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+#pf-root .pf-alloc-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 7px;
+}
+#pf-root .pf-alloc-bar {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+#pf-root .pf-alloc-seg {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+#pf-root .pf-alloc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 9px;
+}
+#pf-root .pf-alloc-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+}
+#pf-root .pf-alloc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+#pf-root .pf-coin-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+#pf-root .pf-coin-qty {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+#pf-root .pf-price-tag {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+#pf-root .pf-price-tag .pf-live-price {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  display: block;
+  margin-top: 2px;
+}
+#pf-root .pf-card-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 3px 0;
+}
+#pf-root .pf-card-row .val { font-family: 'IBM Plex Mono', monospace; color: var(--text); }
+#pf-root .pf-pnl-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+#pf-root .pf-pnl-amt { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; }
+#pf-root .pf-pnl-pct { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 2px 7px; border-radius: 5px; }
+#pf-root .gain-txt { color: var(--gain); }
+#pf-root .loss-txt { color: var(--loss); }
+#pf-root .gain-bg { background: rgba(79,191,127,0.14); color: var(--gain); }
+#pf-root .loss-bg { background: rgba(224,100,90,0.14); color: var(--loss); }
+
+#pf-root .pf-manual-price {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#pf-root .pf-manual-price input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 5px 7px;
+}
+#pf-root .pf-manual-price label {
+  font-size: 10.5px;
+  color: var(--warn);
+  white-space: nowrap;
+}
+#pf-root .pf-manual-price label.dim {
+  color: var(--text-faint);
+}
+
+/* ---------- Detail / lots table ---------- */
+#pf-root .pf-detail {
+  display: none;
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  margin-top: -12px;
+  margin-bottom: 12px;
+  padding: 14px 17px 16px;
+  min-width: 0;
+  overflow-x: auto;
+}
+#pf-root .pf-detail.show { display: block; }
+#pf-root table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#pf-root th {
+  text-align: right;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: var(--text-faint);
+  font-size: 10.5px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+#pf-root th:first-child, #pf-root td:first-child { text-align: left; }
+#pf-root td {
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 6px 8px;
+  color: var(--text-dim);
+  border-bottom: 1px solid #20242f;
+}
+#pf-root tr:last-child td { border-bottom: none; }
+#pf-root td.date { color: var(--text); font-family: 'Inter', sans-serif; }
+#pf-root td.flag { color: var(--warn); }
+#pf-root .pf-flag-note {
+  font-size: 11px;
+  color: var(--warn);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  line-height: 1.5;
+}
+#pf-root td.del-cell { width: 44px; padding-left: 0; white-space: nowrap; }
+#pf-root .pf-del-btn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+#pf-root .pf-del-btn:hover { color: var(--loss); background: rgba(224,100,90,0.1); }
+#pf-root .pf-del-btn.confirm { color: var(--loss); font-size: 10px; white-space: nowrap; }
+
+#pf-root .pf-add-toggle {
+  margin-top: 10px;
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#pf-root .pf-add-toggle:hover { border-color: var(--accent); color: var(--text); }
+#pf-root .pf-add-form {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+#pf-root .pf-add-form.wide-coin { grid-template-columns: 1fr 1fr; }
+#pf-root .pf-add-form label {
+  font-size: 10px;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: 3px;
+}
+#pf-root .pf-add-form input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 5px 7px;
+}
+#pf-root .pf-add-form .full { grid-column: 1 / -1; }
+#pf-root .pf-add-submit {
+  grid-column: 1 / -1;
+  background: var(--accent);
+  color: #1a1206;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 7px 0;
+  cursor: pointer;
+  margin-top: 2px;
+}
+#pf-root .pf-add-submit:hover { opacity: 0.9; }
+#pf-root .pf-add-err {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--loss);
+  display: none;
+}
+#pf-root .pf-add-coin-wrap {
+  margin-bottom: 12px;
+}
+#pf-root .pf-add-coin-btn {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#pf-root .pf-add-coin-btn:hover { border-color: var(--accent); color: var(--text); }
+#pf-root .pf-add-coin-panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+#pf-root .pf-add-coin-panel.show { display: block; }
+#pf-root .pf-add-coin-panel .hint {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin: -2px 0 8px;
+}
+#pf-root .pf-del-coin {
+  margin-top: 10px;
+  background: none;
+  border: 1px dashed var(--loss);
+  color: var(--loss);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ---------- Corrections panel ---------- */
+#pf-root .pf-corrections {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-top: 18px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+#pf-root .pf-corrections h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+#pf-root .pf-corrections ul { margin: 0; padding-left: 18px; }
+#pf-root .pf-corrections li { margin-bottom: 8px; }
+#pf-root .pf-corrections b { color: var(--text); }
+#pf-root .pf-corrections .mono { color: var(--accent); }
+
+#pf-root .pf-hero-sub .gain-txt, #pf-root .pf-hero-sub .loss-txt { font-weight: 600; }
+#pf-root .pf-sold-line { color: var(--text-faint); font-size: 11px; margin-top: -4px; }
+#pf-root .pf-sell-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+#pf-root .pf-sell-section h4 {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-faint);
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+#pf-root .pf-qty-slider-wrap {
+  grid-column: 1 / -1;
+}
+#pf-root .pf-qty-slider-wrap .row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+#pf-root .pf-qty-slider-wrap .row-top label { margin: 0; }
+#pf-root .pf-qty-slider-wrap .row-top .pf-qty-readout {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+#pf-root input[type="range"].pf-qty-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 6px 0 8px;
+  cursor: pointer;
+}
+#pf-root input[type="range"].pf-qty-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #12151c;
+  cursor: pointer;
+}
+#pf-root input[type="range"].pf-qty-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #12151c;
+  cursor: pointer;
+}
+#pf-root .pf-qty-presets {
+  display: flex;
+  gap: 5px;
+}
+#pf-root .pf-qty-preset-btn {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  border-radius: 5px;
+  padding: 4px 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+#pf-root .pf-qty-preset-btn:hover,
+#pf-root .pf-qty-preset-btn.active { border-color: var(--accent); color: var(--text); }
+
+#pf-root .pf-soldout-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+#pf-root .pf-card.sold-out {
+  opacity: 0.62;
+  border-style: dashed;
+}
+#pf-root .pf-card.sold-out:hover { opacity: 0.85; }
+
+#pf-root .pf-footnote {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 18px;
+}
+
+@media (max-width: 480px) {
+  #pf-root { padding: 20px 14px 24px; }
+  #pf-root .pf-hero { flex-direction: column; align-items: flex-start; }
+  #pf-root .pf-hero-right { text-align: left; width: 100%; }
+  #pf-root .pf-hero-right .pf-hero-label { text-align: left; }
+  #pf-root .pf-hero-value { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+
+<div id="pf-root">
+  <div class="pf-topbar">
+    <div class="pf-title">Portfolio PnL — Reynaldo</div>
+    <div class="pf-sync">
+      <span id="pf-sync-text">memuat harga…</span>
+      <button class="pf-refresh-btn" id="pf-refresh-btn" onclick="pfRefresh()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="pf-hero">
+    <div>
+      <div class="pf-hero-label">Nilai portofolio saat ini</div>
+      <div class="pf-hero-value mono" id="pf-total-value">$0</div>
+      <div class="pf-hero-sub">Modal aktif (yang masih dipegang): <span class="mono" id="pf-total-modal">$0</span></div>
+      <div class="pf-hero-sub" id="pf-realized-row">Realized PnL (sudah dijual): <span class="mono" id="pf-total-realized">$0</span></div>
+    </div>
+    <div class="pf-hero-right">
+      <div class="pf-hero-label">Unrealized PnL</div>
+      <div class="pf-hero-pnl" id="pf-total-pnl">—</div>
+      <div class="pf-modalbar"><div class="pf-modalbar-fill" id="pf-modalbar-fill"></div></div>
+    </div>
+  </div>
+
+  <div class="pf-alloc" id="pf-alloc-wrap" style="display:none;">
+    <div class="pf-alloc-label">Alokasi portofolio (berdasarkan nilai sekarang)</div>
+    <div class="pf-alloc-bar" id="pf-alloc-bar"></div>
+    <div class="pf-alloc-legend" id="pf-alloc-legend"></div>
+  </div>
+
+  <div class="pf-add-coin-wrap">
+    <button class="pf-add-coin-btn" onclick="toggleAddCoin()">+ Tambah coin baru</button>
+    <div class="pf-add-coin-panel" id="pf-add-coin-panel">
+      <div class="pf-add-form wide-coin" id="pf-add-coin-form">
+        <div class="full">
+          <label>Simbol coin (mis. WIF)</label>
+          <input id="ac-symbol" type="text" placeholder="WIF" />
+        </div>
+        <div class="full">
+          <label>CoinGecko ID (opsional — kosongkan kalau tidak yakin, isi manual nanti)</label>
+          <input id="ac-geckoid" type="text" placeholder="dogwifcoin" />
+        </div>
+        <div>
+          <label>Tanggal (dd/mm/yy)</label>
+          <input id="ac-date" type="text" placeholder="14/09/26" />
+        </div>
+        <div>
+          <label>Harga beli ($)</label>
+          <input id="ac-price" type="number" step="any" placeholder="0.5384" />
+        </div>
+        <div>
+          <label>Qty</label>
+          <input id="ac-qty" type="number" step="any" placeholder="5572.06" />
+        </div>
+        <div>
+          <label>Modal ($, opsional)</label>
+          <input id="ac-modal" type="number" step="any" placeholder="auto" />
+        </div>
+        <div class="pf-add-err" id="ac-err"></div>
+        <button class="pf-add-submit full" onclick="submitAddCoin()">Tambah coin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-toolbar">
+    <select class="pf-sort-select" id="pf-sort-select" onchange="setSortMode(this.value)">
+      <option value="value">Urutkan: nilai terbesar</option>
+      <option value="pnl">Urutkan: PnL % tertinggi</option>
+      <option value="az">Urutkan: A–Z</option>
+    </select>
+  </div>
+
+  <div class="pf-grid" id="pf-grid"></div>
+  <div id="pf-corrections-slot"></div>
+
+  <div class="pf-footnote">Harga live dari CoinGecko, semua kolom bisa diedit manual · catat beli & jual langsung dari sini, tersimpan di browser HP/laptop kamu · dibuat 14 Sep 2026</div>
+</div>
+
+<script>
+(function () {
+  const HOLDINGS = {
+    ASTER: {
+      geckoId: 'aster-2',
+      manual: false,
+      lots: [
+        ['07/12/25', 0.967, 10341, 10000],
+        ['09/12/25', 0.953, 5246, 5000],
+        ['10/12/25', 0.959, 5213, 5000],
+        ['15/12/25', 0.892, 5605, 5000],
+        ['16/12/25', 0.817, 6119, 5000],
+        ['27/12/25', 0.717, 13947, 10000],
+        ['06/03/26', 0.700, 14285, 10000],
+        ['20/03/26', 0.688, 14534.88, 10000],
+        ['22/04/26', 0.684, 14619, 10000],
+        ['26/05/26', 0.683, 7320, 5000],
+        ['03/06/26', 0.688, 7267, 5000],
+        ['04/06/26', 0.654, 7645, 5000],
+        ['19/06/26', 0.638, 7836, 5000],
+        ['09/09/26', 0.749, 4005, 3000],
+        ['10/09/26', 0.721, 6934, 5000],
+        ['10/09/26', 0.708, 7062, 5000],
+        ['11/09/26', 0.682, 7331, 5000],
+      ]
+    },
+    HYPE: {
+      geckoId: 'hyperliquid',
+      manual: false,
+      lots: [
+        ['23/06/26', 60.00, 166.66, 10000],
+        ['27/06/26', 63.51, 157.45, 10000],
+        ['09/09/26', 86.04, 58.11, 5000],
+        ['10/09/26', 83.00, 120.77, 10000],
+        ['10/09/26', 79.78, 125.34, 10000],
+        ['13/09/26', 77.45, 64.55, 5000],
+      ]
+    },
+    PONS: {
+      geckoId: null,
+      manual: true,
+      manualDefault: 0.5384,
+      lots: [
+        ['14/09/26', 0.5384, 5572.06, 3000],
+      ]
+    },
+    XPL: {
+      geckoId: 'plasma',
+      manual: false,
+      lots: [
+        ['24/08/26', 0.098, 30612, 3000],
+      ]
+    },
+    SUI: {
+      geckoId: 'sui',
+      manual: false,
+      lots: [
+        ['27/08/26', 0.7652, 5227, 4000],
+      ]
+    },
+    PEPE: {
+      geckoId: 'pepe',
+      manual: false,
+      lots: [
+        ['30/08/26', 0.00000365, 821917808, 3000],
+      ]
+    },
+  };
+
+  // Transactions the user adds from the UI (not the seed data above), and
+  // whole new coins they add. Both persist to storage keyed per-user.
+  const ADDED_LOTS = {};   // { SYM: [ [date, price, qty, modal], ... ] }
+  const CUSTOM_COINS = {}; // { SYM: { geckoId: string|null } }
+  const SELLS = {};        // { SYM: [ [date, price, qty], ... ] }
+  const SEED_EDITS = {};   // { SYM: { origIdx: [date, price, qty, modal] } } — overrides for the built-in seed rows
+  const SEED_DELETED = {}; // { SYM: [origIdx, ...] } — built-in seed rows the user removed
+
+  function parseDMY(str) {
+    // "14/09/26" or "14/09/2026" -> sortable Date. 2-digit year -> 2000+yy.
+    const parts = String(str).split('/').map(s => s.trim());
+    if (parts.length !== 3) return new Date(0);
+    let [d, mo, y] = parts.map(Number);
+    if (y < 100) y += 2000;
+    return new Date(y, (mo || 1) - 1, d || 1);
+  }
+
+  // manualPrice[sym] = user-entered override. Starts empty; filled once a live
+  // fetch succeeds (as an editable default), or stays empty and the user types
+  // their own number. PONS has no geckoId so it's manual-only from the start.
+  const manualPrice = {};
+  Object.keys(HOLDINGS).forEach(sym => { manualPrice[sym] = null; });
+  const fetchFailed = {};
+
+  const state = { openCard: null, addFormOpen: {}, sellFormOpen: {}, editingLot: {}, pendingDelete: null, sortMode: 'value' };
+
+  function allSymbols() {
+    return Object.keys(HOLDINGS).concat(Object.keys(CUSTOM_COINS).filter(s => !HOLDINGS[s]));
+  }
+  function rawSeedLots(sym) {
+    const seed = HOLDINGS[sym];
+    return (seed && seed.lots) || [];
+  }
+  function effectiveSeedLot(sym, origIdx) {
+    const edits = SEED_EDITS[sym];
+    return (edits && edits[origIdx]) || rawSeedLots(sym)[origIdx];
+  }
+  function isSeedDeleted(sym, origIdx) {
+    return (SEED_DELETED[sym] || []).includes(origIdx);
+  }
+  function coinMeta(sym) {
+    const seed = HOLDINGS[sym];
+    const custom = CUSTOM_COINS[sym];
+    const effectiveSeed = [];
+    rawSeedLots(sym).forEach((lot, idx) => { if (!isSeedDeleted(sym, idx)) effectiveSeed.push(effectiveSeedLot(sym, idx)); });
+    return {
+      geckoId: (seed && seed.geckoId) || (custom && custom.geckoId) || null,
+      seedLots: effectiveSeed,
+      addedLots: ADDED_LOTS[sym] || [],
+      isCustom: !!custom,
+    };
+  }
+  function allLots(sym) {
+    const m = coinMeta(sym);
+    return m.seedLots.concat(m.addedLots);
+  }
+  // Rows for the editable buy table in the UI — each tagged with enough info
+  // (kind + original index) to route an edit/delete click to the right place.
+  function buildBuyRows(sym) {
+    const rows = [];
+    rawSeedLots(sym).forEach((lot, idx) => {
+      if (isSeedDeleted(sym, idx)) return;
+      const eff = effectiveSeedLot(sym, idx);
+      rows.push({ kind: 'seed', idx, date: eff[0], price: eff[1], qty: eff[2], modal: eff[3], edited: !!(SEED_EDITS[sym] && SEED_EDITS[sym][idx]) });
+    });
+    (ADDED_LOTS[sym] || []).forEach((lot, idx) => {
+      rows.push({ kind: 'added', idx, date: lot[0], price: lot[1], qty: lot[2], modal: lot[3], edited: false });
+    });
+    return rows;
+  }
+
+  // Persistence: plain browser localStorage (works on any static host — Netlify,
+  // GitHub Pages, etc). Scoped to this browser/device only, not synced across
+  // devices or accounts. Prefixed so it never collides with another site.
+  const LS_PREFIX = 'pf-dashboard-reynaldo:';
+  function lsGet(key) {
+    try { return localStorage.getItem(LS_PREFIX + key); }
+    catch (e) { return null; } // e.g. storage disabled/blocked — inputs still work this session
+  }
+  function lsSet(key, value) {
+    try { localStorage.setItem(LS_PREFIX + key, value); }
+    catch (e) { /* not persisted this session */ }
+  }
+
+  async function loadSavedPrices() {
+    const raw = lsGet('manual-prices');
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw);
+        Object.keys(saved).forEach(sym => { manualPrice[sym] = saved[sym]; });
+      } catch (e) { /* corrupted value — ignore */ }
+    }
+  }
+  async function savePrices() {
+    lsSet('manual-prices', JSON.stringify(manualPrice));
+  }
+
+  async function loadExtras() {
+    const lots = lsGet('added-lots');
+    const coins = lsGet('custom-coins');
+    const sells = lsGet('sells');
+    const seedEdits = lsGet('seed-edits');
+    const seedDeleted = lsGet('seed-deleted');
+    try {
+      if (lots) { const saved = JSON.parse(lots); Object.keys(saved).forEach(sym => { ADDED_LOTS[sym] = saved[sym]; }); }
+      if (coins) { const saved = JSON.parse(coins); Object.keys(saved).forEach(sym => { CUSTOM_COINS[sym] = saved[sym]; }); }
+      if (sells) { const saved = JSON.parse(sells); Object.keys(saved).forEach(sym => { SELLS[sym] = saved[sym]; }); }
+      if (seedEdits) { const saved = JSON.parse(seedEdits); Object.keys(saved).forEach(sym => { SEED_EDITS[sym] = saved[sym]; }); }
+      if (seedDeleted) { const saved = JSON.parse(seedDeleted); Object.keys(saved).forEach(sym => { SEED_DELETED[sym] = saved[sym]; }); }
+    } catch (e) { /* corrupted value — ignore */ }
+  }
+  async function saveAddedLots() { lsSet('added-lots', JSON.stringify(ADDED_LOTS)); }
+  async function saveCustomCoins() { lsSet('custom-coins', JSON.stringify(CUSTOM_COINS)); }
+  async function saveSells() { lsSet('sells', JSON.stringify(SELLS)); }
+  async function saveSeedEdits() { lsSet('seed-edits', JSON.stringify(SEED_EDITS)); }
+  async function saveSeedDeleted() { lsSet('seed-deleted', JSON.stringify(SEED_DELETED)); }
+
+  function fmtUsd(n, decimals) {
+    if (decimals === undefined) decimals = 2;
+    const neg = n < 0;
+    const v = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return (neg ? '-$' : '$') + v;
+  }
+  function fmtPrice(p) {
+    if (p >= 1) return '$' + p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    if (p >= 0.01) return '$' + p.toFixed(4);
+    return '$' + p.toPrecision(3);
+  }
+  function fmtQty(n) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  const AVATAR_PALETTE = ['#d4a94a', '#4fbf7f', '#e0645a', '#6b8fd4', '#c78fd4', '#5fb8c9', '#e0a83a'];
+  function colorForSym(sym) {
+    let hash = 0;
+    for (let i = 0; i < sym.length; i++) hash = (hash * 31 + sym.charCodeAt(i)) >>> 0;
+    return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+  }
+  function logoMarkup(sym) {
+    const img = coinImage[sym];
+    const initials = sym.slice(0, 2);
+    const color = colorForSym(sym);
+    const fallbackDiv = `<div class="pf-coin-logo-fallback" style="background:${color}">${initials}</div>`;
+    if (!img) return fallbackDiv;
+    return `<span class="pf-coin-logo-wrap">
+        <img src="${img}" alt="" class="pf-coin-logo" loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="pf-coin-logo-fallback" style="display:none;background:${color}">${initials}</div>
+      </span>`;
+  }
+  function coinSells(sym) { return SELLS[sym] || []; }
+
+  function coinLedger(sym) {
+    // Chronological weighted-average-cost ledger: every buy updates the
+    // running average cost; every sell locks in realized PnL against that
+    // running average and reduces qty (average itself doesn't move on a sell).
+    const events = [];
+    allLots(sym).forEach(([date, price, qty]) => events.push({ type: 'buy', date, price, qty }));
+    coinSells(sym).forEach(([date, price, qty], origIndex) => events.push({ type: 'sell', date, price, qty, origIndex }));
+    events.sort((a, b) => parseDMY(a.date) - parseDMY(b.date));
+
+    let qty = 0, avg = 0, totalBuyCost = 0, boughtQty = 0, soldQty = 0, realizedPnl = 0;
+    const sellRealized = {};
+    events.forEach(ev => {
+      if (ev.type === 'buy') {
+        const newQty = qty + ev.qty;
+        avg = newQty > 0 ? (qty * avg + ev.qty * ev.price) / newQty : ev.price;
+        qty = newQty;
+        totalBuyCost += ev.price * ev.qty;
+        boughtQty += ev.qty;
+      } else {
+        const sellQty = Math.min(ev.qty, qty); // clamp defensively — UI already blocks over-selling
+        const realized = (ev.price - avg) * sellQty;
+        realizedPnl += realized;
+        qty -= sellQty;
+        soldQty += ev.qty;
+        sellRealized[ev.origIndex] = realized;
+      }
+    });
+    return {
+      events, boughtQty, soldQty,
+      remainingQty: Math.max(0, qty),
+      avgCost: avg,
+      totalBuyCost,
+      remainingCost: Math.max(0, qty) * avg,
+      realizedPnl,
+      sellRealized,
+    };
+  }
+
+  function coinTotals(sym) {
+    const l = coinLedger(sym);
+    return {
+      qty: l.remainingQty,
+      cost: l.remainingCost,
+      avgCost: l.avgCost,
+      boughtQty: l.boughtQty,
+      soldQty: l.soldQty,
+      realizedPnl: l.realizedPnl,
+      sellRealized: l.sellRealized,
+    };
+  }
+
+  const coinImage = {};      // { SYM: logoUrl }
+  const coinChange24h = {};  // { SYM: percent number }
+
+  async function fetchPrices() {
+    const syms = allSymbols();
+    const gidToSyms = {};
+    syms.forEach(sym => {
+      const gid = coinMeta(sym).geckoId;
+      if (!gid) return;
+      (gidToSyms[gid] || (gidToSyms[gid] = [])).push(sym);
+    });
+    const ids = Object.keys(gidToSyms).join(',');
+    if (!ids) return true;
+    const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&price_change_percentage=24h';
+
+    async function attempt() {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }
+
+    let data = null;
+    try {
+      data = await attempt();
+    } catch (e1) {
+      // Transient failure (rate limit, blip) — wait a beat and try once more
+      // before giving up and falling back to manual entry.
+      await new Promise(r => setTimeout(r, 1500));
+      try {
+        data = await attempt();
+      } catch (e2) {
+        syms.forEach(sym => { if (coinMeta(sym).geckoId) fetchFailed[sym] = true; });
+        return false;
+      }
+    }
+
+    const byId = {};
+    (data || []).forEach(row => { byId[row.id] = row; });
+    let anyOk = false;
+    Object.entries(gidToSyms).forEach(([gid, symList]) => {
+      const row = byId[gid];
+      symList.forEach(sym => {
+        if (row && typeof row.current_price === 'number') {
+          fetchFailed[sym] = false;
+          anyOk = true;
+          coinImage[sym] = row.image || null;
+          coinChange24h[sym] = typeof row.price_change_percentage_24h === 'number' ? row.price_change_percentage_24h : null;
+          // only overwrite the input if the user hasn't typed a custom value yet,
+          // so we never clobber someone's manual correction.
+          if (manualPrice[sym] === null || manualPrice[sym] === undefined) {
+            manualPrice[sym] = row.current_price;
+          }
+        } else {
+          fetchFailed[sym] = true;
+        }
+      });
+    });
+    return anyOk;
+  }
+
+  function getLivePrice(sym) {
+    const el = document.getElementById('pf-manual-' + sym);
+    if (el) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) return v;
+    }
+    return manualPrice[sym];
+  }
+
+  window.setSortMode = function (mode) {
+    state.sortMode = mode;
+    render();
+  };
+
+  function render() {
+    const grid = document.getElementById('pf-grid');
+    grid.innerHTML = '';
+    let totalValue = 0, totalModal = 0, totalRealized = 0;
+
+    // Compute everything up front so we can sort before building DOM nodes.
+    const rowsData = allSymbols().map(sym => {
+      const m = coinMeta(sym);
+      const t = coinTotals(sym);
+      const live = getLivePrice(sym);
+      const hasLive = live !== undefined && live !== null && !isNaN(live);
+      const value = hasLive ? live * t.qty : 0;
+      const pnl = hasLive ? value - t.cost : 0;
+      const pnlPct = hasLive && t.cost ? (pnl / t.cost) * 100 : 0;
+      return { sym, m, t, live, hasLive, value, pnl, pnlPct };
+    });
+
+    if (state.sortMode === 'pnl') {
+      rowsData.sort((a, b) => (b.hasLive ? b.pnlPct : -Infinity) - (a.hasLive ? a.pnlPct : -Infinity));
+    } else if (state.sortMode === 'az') {
+      rowsData.sort((a, b) => a.sym.localeCompare(b.sym));
+    } else {
+      rowsData.sort((a, b) => b.value - a.value);
+    }
+
+    rowsData.forEach(d => {
+      const { sym, m, t, live, hasLive, value, pnl, pnlPct } = d;
+      if (hasLive) { totalValue += value; }
+      totalModal += t.cost;
+      totalRealized += t.realizedPnl;
+
+      const isManualOnly = !m.geckoId;
+      const failed = fetchFailed[sym];
+      let statusLabel = 'live · CoinGecko';
+      if (isManualOnly) statusLabel = 'manual';
+      else if (failed) statusLabel = 'fetch gagal — isi manual';
+      const isSoldOut = t.boughtQty > 0 && t.qty <= 1e-9;
+      const chg = coinChange24h[sym];
+      const hasChg = hasLive && typeof chg === 'number';
+
+      const card = document.createElement('div');
+      card.className = 'pf-card' + (state.openCard === sym ? ' open' : '') + (isSoldOut ? ' sold-out' : '');
+      card.onclick = (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') toggleCard(sym); };
+
+      card.innerHTML = `
+        <div class="pf-card-top">
+          <div class="pf-card-id">
+            ${logoMarkup(sym)}
+            <div>
+              <div class="pf-coin-name">${sym}${isSoldOut ? '<span class="pf-soldout-badge">habis terjual</span>' : ''}</div>
+              <div class="pf-coin-qty">${fmtQty(t.qty)} unit${t.soldQty > 0 ? ` <span style="color:var(--text-faint)">(dari ${fmtQty(t.boughtQty)} dibeli)</span>` : ''}</div>
+            </div>
+          </div>
+          <div class="pf-price-tag">
+            harga now
+            <span class="pf-live-price">${hasLive ? fmtPrice(live) : '…'}</span>
+            ${hasChg ? `<span class="pf-chg-badge ${chg >= 0 ? 'gain-bg' : 'loss-bg'}">${chg >= 0 ? '+' : ''}${chg.toFixed(1)}% 24j</span>` : ''}
+          </div>
+        </div>
+        <div class="pf-card-row"><span>Avg. cost</span><span class="val">${fmtPrice(t.avgCost)}</span></div>
+        <div class="pf-card-row"><span>Modal aktif</span><span class="val">${fmtUsd(t.cost, 0)}</span></div>
+        <div class="pf-card-row"><span>Nilai sekarang</span><span class="val">${hasLive ? fmtUsd(value, 0) : '…'}</span></div>
+        ${t.soldQty > 0 ? `<div class="pf-card-row"><span>Realized PnL</span><span class="val ${t.realizedPnl >= 0 ? 'gain-txt' : 'loss-txt'}">${t.realizedPnl >= 0 ? '+' : ''}${fmtUsd(t.realizedPnl, 0)}</span></div>` : ''}
+        <div class="pf-manual-price">
+          <label class="${failed || isManualOnly ? '' : 'dim'}">${statusLabel}</label>
+          <input id="pf-manual-${sym}" type="number" step="any"
+                 value="${hasLive ? live : ''}" placeholder="isi harga"
+                 onclick="event.stopPropagation()" oninput="pfManualChange('${sym}')" />
+        </div>
+        ${isSoldOut
+          ? `<div class="pf-pnl-line"><span class="pf-sold-line">Semua unit sudah terjual — cek realized PnL di atas.</span></div>`
+          : `<div class="pf-pnl-line">
+              <span class="pf-pnl-amt ${pnl >= 0 ? 'gain-txt' : 'loss-txt'}">${hasLive ? (pnl >= 0 ? '+' : '') + fmtUsd(pnl, 0) : '—'}</span>
+              <span class="pf-pnl-pct ${pnl >= 0 ? 'gain-bg' : 'loss-bg'}">${hasLive ? (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%' : '—'}</span>
+            </div>`}
+      `;
+      grid.appendChild(card);
+
+      const detail = document.createElement('div');
+      detail.className = 'pf-detail' + (state.openCard === sym ? ' show' : '');
+      detail.id = 'pf-detail-' + sym;
+      detail.innerHTML = buildDetailTable(sym);
+      grid.appendChild(detail);
+    });
+
+    document.getElementById('pf-total-value').textContent = fmtUsd(totalValue, 0);
+    document.getElementById('pf-total-modal').textContent = fmtUsd(totalModal, 0);
+    const realizedEl = document.getElementById('pf-total-realized');
+    realizedEl.textContent = (totalRealized >= 0 ? '+' : '') + fmtUsd(totalRealized, 0);
+    realizedEl.className = 'mono ' + (totalRealized >= 0 ? 'gain-txt' : 'loss-txt');
+    document.getElementById('pf-realized-row').style.display = totalRealized !== 0 ? 'block' : 'none';
+    const totalPnl = totalValue - totalModal;
+    const totalPnlPct = totalModal ? (totalPnl / totalModal) * 100 : 0;
+    const pnlEl = document.getElementById('pf-total-pnl');
+    pnlEl.className = 'pf-hero-pnl ' + (totalPnl >= 0 ? 'gain-txt' : 'loss-txt');
+    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + fmtUsd(totalPnl, 0) + '  (' + (totalPnlPct >= 0 ? '+' : '') + totalPnlPct.toFixed(1) + '%)';
+    const barPct = totalModal ? Math.max(0, Math.min(100, (totalValue / totalModal) * 100)) : 0;
+    document.getElementById('pf-modalbar-fill').style.width = barPct + '%';
+    document.getElementById('pf-modalbar-fill').style.background = totalPnl >= 0 ? 'var(--gain)' : 'var(--loss)';
+
+    // Allocation bar — only coins with live-priced value > 0 get a segment.
+    const allocWrap = document.getElementById('pf-alloc-wrap');
+    const withValue = rowsData.filter(d => d.hasLive && d.value > 0);
+    if (withValue.length && totalValue > 0) {
+      allocWrap.style.display = 'block';
+      const sorted = withValue.slice().sort((a, b) => b.value - a.value);
+      const barEl = document.getElementById('pf-alloc-bar');
+      const legendEl = document.getElementById('pf-alloc-legend');
+      barEl.innerHTML = sorted.map(d => {
+        const pct = (d.value / totalValue) * 100;
+        return `<div class="pf-alloc-seg" style="width:${pct}%;background:${colorForSym(d.sym)}" title="${d.sym} ${pct.toFixed(1)}%"></div>`;
+      }).join('');
+      legendEl.innerHTML = sorted.map(d => {
+        const pct = (d.value / totalValue) * 100;
+        return `<span class="pf-alloc-legend-item"><span class="pf-alloc-dot" style="background:${colorForSym(d.sym)}"></span>${d.sym} ${pct.toFixed(1)}%</span>`;
+      }).join('');
+    } else {
+      allocWrap.style.display = 'none';
+    }
+  }
+
+  function buildDetailTable(sym) {
+    const m = coinMeta(sym);
+    const buyRows = buildBuyRows(sym);
+    let rows = '';
+    let flagNote = '';
+    buyRows.forEach(r => {
+      const statedModal = r.modal || r.price * r.qty;
+      const actual = r.price * r.qty;
+      const diff = actual - statedModal;
+      const flagged = Math.abs(diff) > Math.max(15, statedModal * 0.005);
+      const tag = r.kind === 'added' ? ' <span class="mono" style="color:var(--accent);font-size:10px;">baru</span>'
+                : r.edited ? ' <span class="mono" style="color:var(--warn);font-size:10px;">diedit</span>' : '';
+      rows += `<tr>
+        <td class="date">${r.date}${tag}</td>
+        <td>${fmtPrice(r.price)}</td>
+        <td>${fmtQty(r.qty)}</td>
+        <td class="${flagged ? 'flag' : ''}">${fmtUsd(actual, 2)}${flagged ? ' ⚠' : ''}</td>
+        <td class="del-cell">
+          <button class="pf-del-btn" onclick="pfEditLot('${sym}', '${r.kind}', ${r.idx})" title="edit">✎</button>
+          <button class="pf-del-btn" onclick="pfDeleteLot('${sym}', '${r.kind}', ${r.idx}, this)" title="hapus">✕</button>
+        </td>
+      </tr>`;
+      if (flagged && r.kind === 'seed' && !r.edited) {
+        flagNote += `Baris ${r.date}: harga × qty = ${fmtUsd(actual, 2)}, beda ${fmtUsd(diff, 2)} dari catatan modal (${fmtUsd(statedModal, 0)}) yang kamu tulis. `;
+      }
+    });
+    const addOpen = !!state.addFormOpen[sym];
+    const editing = state.editingLot[sym];
+    const editRow = editing ? buyRows.find(r => r.kind === editing.kind && r.idx === editing.idx) : null;
+    const pf = editRow ? { date: editRow.date, price: editRow.price, qty: editRow.qty, modal: editRow.modal } : { date: '', price: '', qty: '', modal: '' };
+    const sellOpen = !!state.sellFormOpen[sym];
+    const sells = coinSells(sym);
+    const t = coinTotals(sym);
+    let sellRows = '';
+    sells.forEach((sale, idx) => {
+      const [date, price, qty] = sale;
+      const realized = t.sellRealized[idx] || 0;
+      sellRows += `<tr>
+        <td class="date">${date}</td>
+        <td>${fmtPrice(price)}</td>
+        <td>${fmtQty(qty)}</td>
+        <td class="${realized >= 0 ? 'gain-txt' : 'loss-txt'}">${realized >= 0 ? '+' : ''}${fmtUsd(realized, 2)}</td>
+        <td class="del-cell"><button class="pf-del-btn" onclick="pfDeleteSell('${sym}', ${idx}, this)">✕</button></td>
+      </tr>`;
+    });
+    return `
+      <table>
+        <thead><tr><th>Tanggal</th><th>Harga beli</th><th>Qty</th><th>Modal (harga×qty)</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${flagNote ? `<div class="pf-flag-note">⚠ ${flagNote}</div>` : ''}
+      <button class="pf-add-toggle" onclick="toggleAddTx('${sym}')">${addOpen ? '– tutup form' : '+ tambah transaksi'}</button>
+      ${addOpen ? `
+        <div class="pf-add-form" id="pf-addform-${sym}">
+          <div>
+            <label>Tanggal (dd/mm/yy)</label>
+            <input id="tx-date-${sym}" type="text" placeholder="14/09/26" value="${pf.date}" />
+          </div>
+          <div>
+            <label>Harga beli ($)</label>
+            <input id="tx-price-${sym}" type="number" step="any" placeholder="0.75" value="${pf.price}" />
+          </div>
+          <div>
+            <label>Qty</label>
+            <input id="tx-qty-${sym}" type="number" step="any" placeholder="1000" value="${pf.qty}" />
+          </div>
+          <div>
+            <label>Modal ($, opsional)</label>
+            <input id="tx-modal-${sym}" type="number" step="any" placeholder="auto" value="${editing ? pf.modal : ''}" />
+          </div>
+          <div class="pf-add-err" id="tx-err-${sym}"></div>
+          <button class="pf-add-submit" onclick="submitAddTx('${sym}')">${editing ? 'Simpan perubahan' : 'Simpan transaksi'}</button>
+          ${editing ? `<button class="pf-add-toggle" style="margin-top:0;" onclick="cancelEditLot('${sym}')">Batal edit</button>` : ''}
+        </div>
+      ` : ''}
+
+      <div class="pf-sell-section">
+        <h4>Riwayat jual ${t.soldQty > 0 ? `· terjual ${fmtQty(t.soldQty)} unit` : ''}</h4>
+        ${sells.length ? `<table><thead><tr><th>Tanggal</th><th>Harga jual</th><th>Qty</th><th>Realized</th><th></th></tr></thead><tbody>${sellRows}</tbody></table>` : `<div class="pf-sold-line">Belum ada transaksi jual buat ${sym}.</div>`}
+        ${t.qty > 1e-9 ? `
+          <button class="pf-add-toggle" onclick="toggleSellForm('${sym}')">${sellOpen ? '– tutup form' : '+ catat jual'}</button>
+          ${sellOpen ? `
+            <div class="pf-add-form" id="pf-sellform-${sym}">
+              <div>
+                <label>Tanggal jual (dd/mm/yy)</label>
+                <input id="sell-date-${sym}" type="text" placeholder="15/09/26" />
+              </div>
+              <div>
+                <label>Harga jual ($)</label>
+                <input id="sell-price-${sym}" type="number" step="any" placeholder="0.9" />
+              </div>
+              <div class="pf-qty-slider-wrap full">
+                <div class="row-top">
+                  <label>Qty terjual</label>
+                  <span class="pf-qty-readout" id="sell-readout-${sym}">0 / ${fmtQty(t.qty)}</span>
+                </div>
+                <input id="sell-qty-${sym}" type="number" step="any" placeholder="1000"
+                       oninput="pfSellQtyInput('${sym}', ${t.qty})" style="margin-bottom:6px;" />
+                <input id="sell-slider-${sym}" class="pf-qty-slider" type="range"
+                       min="0" max="${t.qty}" step="any" value="0"
+                       oninput="pfSellSliderInput('${sym}', ${t.qty})" />
+                <div class="pf-qty-presets">
+                  <button type="button" class="pf-qty-preset-btn" onclick="pfSellPreset('${sym}', ${t.qty}, 0.25, this)">25%</button>
+                  <button type="button" class="pf-qty-preset-btn" onclick="pfSellPreset('${sym}', ${t.qty}, 0.5, this)">50%</button>
+                  <button type="button" class="pf-qty-preset-btn" onclick="pfSellPreset('${sym}', ${t.qty}, 0.75, this)">75%</button>
+                  <button type="button" class="pf-qty-preset-btn" onclick="pfSellPreset('${sym}', ${t.qty}, 1, this)">Max</button>
+                </div>
+              </div>
+              <div class="pf-add-err" id="sell-err-${sym}"></div>
+              <button class="pf-add-submit" onclick="submitSell('${sym}')">Simpan jual</button>
+            </div>
+          ` : ''}
+        ` : `<div class="pf-sold-line" style="margin-top:8px;">Nggak ada sisa unit buat dijual.</div>`}
+      </div>
+
+      ${m.isCustom ? `
+        <div class="pf-sell-section">
+          <h4>Sumber harga</h4>
+          <div class="pf-sold-line" style="margin-bottom:6px;">
+            ${m.geckoId ? `Live dari CoinGecko, ID: <span class="mono" style="color:var(--text)">${m.geckoId}</span>` : 'Manual — belum tersambung ke CoinGecko.'}
+          </div>
+          <div class="pf-manual-price" style="margin-top:0;">
+            <input id="gid-${sym}" type="text" placeholder="mis. bitcoin" value="${m.geckoId || ''}" style="width:100%;" />
+            <button class="pf-add-submit" style="grid-column:auto;width:auto;padding:5px 12px;" onclick="pfSetGeckoId('${sym}')">Simpan</button>
+          </div>
+        </div>
+        <button class="pf-del-coin" onclick="pfDeleteCoin('${sym}', this)">Hapus coin ${sym}</button>
+      ` : ''}
+    `;
+  }
+
+  window.toggleCard = function (sym) {
+    state.openCard = state.openCard === sym ? null : sym;
+    render();
+  };
+
+  window.toggleAddTx = function (sym) {
+    const opening = !state.addFormOpen[sym];
+    state.addFormOpen[sym] = opening;
+    if (opening) delete state.editingLot[sym]; // opening fresh = add mode, not edit
+    render();
+  };
+
+  window.pfEditLot = function (sym, kind, idx) {
+    state.editingLot[sym] = { kind, idx };
+    state.addFormOpen[sym] = true;
+    render();
+  };
+
+  window.cancelEditLot = function (sym) {
+    delete state.editingLot[sym];
+    state.addFormOpen[sym] = false;
+    render();
+  };
+
+  window.submitAddTx = async function (sym) {
+    const dateEl = document.getElementById('tx-date-' + sym);
+    const priceEl = document.getElementById('tx-price-' + sym);
+    const qtyEl = document.getElementById('tx-qty-' + sym);
+    const modalEl = document.getElementById('tx-modal-' + sym);
+    const errEl = document.getElementById('tx-err-' + sym);
+    const date = dateEl.value.trim();
+    const price = parseFloat(priceEl.value);
+    const qty = parseFloat(qtyEl.value);
+    let modal = parseFloat(modalEl.value);
+    if (!date || isNaN(price) || price <= 0 || isNaN(qty) || qty <= 0) {
+      errEl.textContent = 'Isi tanggal, harga, dan qty yang valid dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (isNaN(modal)) modal = price * qty;
+    const editing = state.editingLot[sym];
+    if (editing) {
+      if (editing.kind === 'seed') {
+        if (!SEED_EDITS[sym]) SEED_EDITS[sym] = {};
+        SEED_EDITS[sym][editing.idx] = [date, price, qty, modal];
+        await saveSeedEdits();
+      } else {
+        ADDED_LOTS[sym][editing.idx] = [date, price, qty, modal];
+        await saveAddedLots();
+      }
+      delete state.editingLot[sym];
+    } else {
+      if (!ADDED_LOTS[sym]) ADDED_LOTS[sym] = [];
+      ADDED_LOTS[sym].push([date, price, qty, modal]);
+      await saveAddedLots();
+    }
+    state.addFormOpen[sym] = false;
+    render();
+  };
+
+  window.pfDeleteLot = function (sym, kind, idx, btn) {
+    const key = sym + ':' + kind + ':' + idx;
+    if (state.pendingDelete !== key) {
+      state.pendingDelete = key;
+      btn.textContent = 'yakin?';
+      btn.classList.add('confirm');
+      setTimeout(() => { if (state.pendingDelete === key) state.pendingDelete = null; }, 3000);
+      return;
+    }
+    state.pendingDelete = null;
+    if (kind === 'seed') {
+      if (!SEED_DELETED[sym]) SEED_DELETED[sym] = [];
+      SEED_DELETED[sym].push(idx);
+      saveSeedDeleted();
+    } else {
+      ADDED_LOTS[sym].splice(idx, 1);
+      saveAddedLots();
+    }
+    if (state.editingLot[sym] && state.editingLot[sym].kind === kind && state.editingLot[sym].idx === idx) {
+      delete state.editingLot[sym];
+      state.addFormOpen[sym] = false;
+    }
+    render();
+  };
+
+  function pfSyncSellReadout(sym, max) {
+    const qtyEl = document.getElementById('sell-qty-' + sym);
+    const readout = document.getElementById('sell-readout-' + sym);
+    const v = parseFloat(qtyEl.value) || 0;
+    if (readout) readout.textContent = fmtQty(Math.min(v, max)) + ' / ' + fmtQty(max);
+    // highlight a preset button if the value matches it closely
+    document.querySelectorAll(`#pf-sellform-${sym} .pf-qty-preset-btn`).forEach(btn => btn.classList.remove('active'));
+  }
+
+  window.pfSellQtyInput = function (sym, max) {
+    let v = parseFloat(document.getElementById('sell-qty-' + sym).value) || 0;
+    if (v > max) v = max;
+    if (v < 0) v = 0;
+    const slider = document.getElementById('sell-slider-' + sym);
+    if (slider) slider.value = v;
+    pfSyncSellReadout(sym, max);
+  };
+
+  window.pfSellSliderInput = function (sym, max) {
+    const slider = document.getElementById('sell-slider-' + sym);
+    const qtyEl = document.getElementById('sell-qty-' + sym);
+    const v = parseFloat(slider.value) || 0;
+    qtyEl.value = Math.round(v * 100) / 100;
+    pfSyncSellReadout(sym, max);
+  };
+
+  window.pfSellPreset = function (sym, max, frac, btn) {
+    const v = max * frac;
+    document.getElementById('sell-qty-' + sym).value = Math.round(v * 100) / 100;
+    document.getElementById('sell-slider-' + sym).value = v;
+    pfSyncSellReadout(sym, max);
+    document.querySelectorAll(`#pf-sellform-${sym} .pf-qty-preset-btn`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  window.toggleSellForm = function (sym) {
+    state.sellFormOpen[sym] = !state.sellFormOpen[sym];
+    render();
+  };
+
+  window.submitSell = async function (sym) {
+    const dateEl = document.getElementById('sell-date-' + sym);
+    const priceEl = document.getElementById('sell-price-' + sym);
+    const qtyEl = document.getElementById('sell-qty-' + sym);
+    const errEl = document.getElementById('sell-err-' + sym);
+    const date = dateEl.value.trim();
+    const price = parseFloat(priceEl.value);
+    const qty = parseFloat(qtyEl.value);
+    const held = coinTotals(sym).qty;
+    if (!date || isNaN(price) || price <= 0 || isNaN(qty) || qty <= 0) {
+      errEl.textContent = 'Isi tanggal, harga jual, dan qty yang valid dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (qty > held + 1e-9) {
+      errEl.textContent = `Qty melebihi yang kamu pegang sekarang (${fmtQty(held)}).`;
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!SELLS[sym]) SELLS[sym] = [];
+    SELLS[sym].push([date, price, qty]);
+    await saveSells();
+    state.sellFormOpen[sym] = false;
+    render();
+  };
+
+  window.pfDeleteSell = function (sym, idx, btn) {
+    const key = 'sell:' + sym + ':' + idx;
+    if (state.pendingDelete !== key) {
+      state.pendingDelete = key;
+      btn.textContent = 'yakin?';
+      btn.classList.add('confirm');
+      setTimeout(() => { if (state.pendingDelete === key) state.pendingDelete = null; }, 3000);
+      return;
+    }
+    state.pendingDelete = null;
+    SELLS[sym].splice(idx, 1);
+    saveSells();
+    render();
+  };
+
+  window.toggleAddCoin = function () {
+    document.getElementById('pf-add-coin-panel').classList.toggle('show');
+  };
+
+  window.submitAddCoin = async function () {
+    const symEl = document.getElementById('ac-symbol');
+    const gidEl = document.getElementById('ac-geckoid');
+    const dateEl = document.getElementById('ac-date');
+    const priceEl = document.getElementById('ac-price');
+    const qtyEl = document.getElementById('ac-qty');
+    const modalEl = document.getElementById('ac-modal');
+    const errEl = document.getElementById('ac-err');
+    const sym = symEl.value.trim().toUpperCase();
+    const gid = gidEl.value.trim();
+    const date = dateEl.value.trim();
+    const price = parseFloat(priceEl.value);
+    const qty = parseFloat(qtyEl.value);
+    let modal = parseFloat(modalEl.value);
+    if (!sym) { errEl.textContent = 'Isi simbol coin dulu.'; errEl.style.display = 'block'; return; }
+    if (allSymbols().includes(sym)) { errEl.textContent = sym + ' sudah ada di dashboard.'; errEl.style.display = 'block'; return; }
+    if (!date || isNaN(price) || price <= 0 || isNaN(qty) || qty <= 0) {
+      errEl.textContent = 'Isi tanggal, harga, dan qty yang valid dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (isNaN(modal)) modal = price * qty;
+    CUSTOM_COINS[sym] = { geckoId: gid || null };
+    ADDED_LOTS[sym] = [[date, price, qty, modal]];
+    await Promise.all([saveCustomCoins(), saveAddedLots()]);
+    ['ac-symbol','ac-geckoid','ac-date','ac-price','ac-qty','ac-modal'].forEach(id => document.getElementById(id).value = '');
+    errEl.style.display = 'none';
+    document.getElementById('pf-add-coin-panel').classList.remove('show');
+    render();
+    pfRefresh();
+  };
+
+  window.pfDeleteCoin = function (sym, btn) {
+    if (state.pendingDelete !== 'coin:' + sym) {
+      state.pendingDelete = 'coin:' + sym;
+      btn.textContent = 'yakin hapus ' + sym + '? klik lagi';
+      setTimeout(() => { if (state.pendingDelete === 'coin:' + sym) state.pendingDelete = null; }, 3000);
+      return;
+    }
+    state.pendingDelete = null;
+    delete CUSTOM_COINS[sym];
+    delete ADDED_LOTS[sym];
+    delete SELLS[sym];
+    delete manualPrice[sym];
+    delete fetchFailed[sym];
+    if (state.openCard === sym) state.openCard = null;
+    saveCustomCoins();
+    saveAddedLots();
+    saveSells();
+    render();
+  };
+
+  window.pfSetGeckoId = async function (sym) {
+    const input = document.getElementById('gid-' + sym);
+    const val = input.value.trim();
+    if (!CUSTOM_COINS[sym]) return;
+    CUSTOM_COINS[sym].geckoId = val || null;
+    // switching IDs (or clearing one) means old cached price/logo/change no
+    // longer apply — clear them so we don't show stale data under a new ID.
+    manualPrice[sym] = null;
+    delete coinImage[sym];
+    delete coinChange24h[sym];
+    fetchFailed[sym] = false;
+    await saveCustomCoins();
+    render();
+    if (val) pfRefresh();
+  };
+
+  let saveTimer = null;
+  window.pfManualChange = function (sym) {
+    const el = document.getElementById('pf-manual-' + sym);
+    const v = el ? parseFloat(el.value) : NaN;
+    manualPrice[sym] = isNaN(v) ? null : v;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(savePrices, 400); // debounce so typing doesn't spam storage writes
+    render();
+  };
+
+  window.pfRefresh = async function () {
+    const btn = document.getElementById('pf-refresh-btn');
+    btn.classList.add('spinning');
+    document.getElementById('pf-sync-text').textContent = 'memuat harga…';
+    const ok = await fetchPrices();
+    const failedSyms = allSymbols().filter(sym => coinMeta(sym).geckoId && fetchFailed[sym]);
+    if (failedSyms.length === 0) {
+      document.getElementById('pf-sync-text').textContent = 'update ' + new Date().toLocaleTimeString('id-ID');
+    } else if (ok) {
+      document.getElementById('pf-sync-text').textContent = 'sebagian gagal (' + failedSyms.join(', ') + ') — isi manual';
+    } else {
+      document.getElementById('pf-sync-text').textContent = 'gagal ambil harga — isi manual di tiap coin';
+    }
+    btn.classList.remove('spinning');
+    render();
+  };
+
+  function buildCorrections() {
+    const slot = document.getElementById('pf-corrections-slot');
+    slot.innerHTML = `
+      <div class="pf-corrections">
+        <h3>Koreksi yang ditemukan</h3>
+        <ul>
+          <li><b>Semua perhitungan sekarang pakai angka real (harga × qty)</b>, bukan modal yang kamu bulatkan pas nyatat — sesuai yang kamu minta. Kolom "Modal" di tiap card = jumlah harga×qty semua lot, bukan angka bulat ($5k, $10k, dst).</li>
+          <li><b>ASTER — total modal real: <span class="mono">$108.000</span></b> untuk <span class="mono">145.309,88 ASTER</span> (avg cost ≈ <span class="mono">$0,7433</span>). Ringkasan lama "$90k (119.977 aster)" cuma menjumlahkan sampai baris 19/6/26 — 4 transaksi terbaru (9–11 Sep) belum masuk di situ.</li>
+          <li><b>ASTER — tanggal 3/6, 4/6, 19/6 dikonfirmasi 2026</b> (bukan 2025), sudah dipakai di tabel lot.</li>
+          <li><b>HYPE — baris 10/9/26 @ $83</b>: 83 × 120,77 = $10.023,91 (bukan pas $10k). Karena kamu minta pakai angka real, dashboard ini otomatis pakai $10.023,91 sebagai modal baris itu — tidak perlu diubah manual.</li>
+          <li><b>PEPE — harga dikoreksi ke <span class="mono">$0,00000365</span></b> (qty tetap 821.917.808) supaya modal pas $3.000 sesuai konfirmasi kamu. Harga asli yang ditulis ($0,000000365) kurang satu digit nol.</li>
+          <li><b>PONS — sengaja tetap manual.</b> Ticker "PONS" dipakai banyak token berbeda (Bitget, Robinhood/Uniswap, dan beberapa token meme di Solana), harganya beda-beda jauh dan tidak ada satu pun yang otomatis bisa dipastikan itu token PONS/USDT di Bitget punyamu. Daripada salah tarik harga token lain, kolom harganya dibuat manual — tinggal buka Bitget, copy harga PONS/USDT, paste di card PONS.</li>
+          <li><b>Semua coin sekarang bisa diedit manual</b>, bukan cuma PONS — kalau live price dari CoinGecko gagal ke-load atau kamu mau override, tinggal ketik langsung di kolom harga masing-masing card.</li>
+          <li><b>Fitur jual sudah ditambahkan.</b> "+ catat jual" di dalam tiap card buat nyatet transaksi jual. Realized PnL dihitung pakai metode average cost berjalan (avg cost dari semua beli sebelumnya, urut tanggal) — dan qty yang tersisa otomatis kepotong dari yang dibeli. Unrealized PnL cuma dihitung dari sisa yang masih dipegang; yang udah terjual masuk ke Realized PnL di bagian atas.</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  buildCorrections();
+  Promise.all([loadSavedPrices(), loadExtras()]).then(() => {
+    render();
+    pfRefresh();
+  });
+  setInterval(pfRefresh, 90000);
+})();
+</script>
+</body>
+</html>
