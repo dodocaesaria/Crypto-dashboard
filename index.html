@@ -73,6 +73,8 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
 #pf-root .pf-refresh-btn.spinning svg { animation: pf-spin 0.8s linear infinite; }
 @keyframes pf-spin { to { transform: rotate(360deg); } }
 
+#pf-root .pf-cloud-wrap { margin-bottom: 16px; }
+
 /* ---------- Hero ---------- */
 #pf-root .pf-hero {
   background: linear-gradient(155deg, var(--surface) 0%, var(--surface-2) 100%);
@@ -609,6 +611,80 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
 }
 #pf-root .pf-card.sold-out:hover { opacity: 0.85; }
 
+#pf-root .pf-futures-wrap {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+#pf-root .pf-futures-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+#pf-root .pf-section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+}
+#pf-root .pf-side-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+#pf-root .pf-side-long { background: rgba(79,191,127,0.16); color: var(--gain); }
+#pf-root .pf-side-short { background: rgba(224,100,90,0.16); color: var(--loss); }
+#pf-root .pf-lev-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  margin-left: 4px;
+}
+#pf-root .pf-liq-row {
+  color: var(--warn) !important;
+}
+#pf-root .pf-liq-row .val { color: var(--warn) !important; }
+#pf-root .pf-add-form select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 5px 7px;
+}
+#pf-root .pf-close-btn {
+  margin-top: 10px;
+  background: none;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  width: 100%;
+}
+#pf-root .pf-close-form {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+#pf-root .pf-close-form input { grid-column: span 1; }
+#pf-root .pf-card.futures-closed {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
 #pf-root .pf-footnote {
   text-align: center;
   font-size: 11px;
@@ -624,6 +700,10 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   #pf-root .pf-hero-value { font-size: 32px; }
 }
 </style>
+<!-- Optional cloud sync (only activates once the user pastes their own free
+     Firebase project config in the "Sinkronisasi Cloud" panel below) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -636,6 +716,28 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         refresh
       </button>
+    </div>
+  </div>
+
+  <div class="pf-cloud-wrap">
+    <button class="pf-add-coin-btn" onclick="toggleCloudPanel()" id="pf-cloud-toggle-btn">☁️ Sinkronisasi Cloud — belum disambungkan</button>
+    <div class="pf-add-coin-panel" id="pf-cloud-panel">
+      <div class="pf-sold-line" style="margin-bottom:8px;">
+        Tempel config Firebase project kamu (dari Firebase Console) dan bikin kode sinkronisasi sendiri (bebas, rahasia — ini yang bikin data kamu nggak nyampur sama orang lain). Pakai config + kode yang SAMA persis di tiap HP biar datanya nyambung.
+      </div>
+      <div class="pf-add-form wide-coin">
+        <div class="full">
+          <label>Firebase config (paste seluruh objek JS-nya)</label>
+          <textarea id="cloud-config" rows="5" placeholder='{"apiKey": "...", "projectId": "...", ...}' style="width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;border-radius:6px;padding:7px;"></textarea>
+        </div>
+        <div class="full">
+          <label>Kode sinkronisasi (bikin sendiri, rahasia)</label>
+          <input id="cloud-code" type="text" placeholder="misal: reynaldo-portofolio-xyz123" />
+        </div>
+        <div class="pf-add-err" id="cloud-err"></div>
+        <button class="pf-add-submit full" onclick="submitCloudConfig()">Simpan & Sambungkan</button>
+        <button class="pf-del-coin full" id="cloud-disconnect-btn" style="display:none;" onclick="disconnectCloud()">Putuskan sinkronisasi</button>
+      </div>
     </div>
   </div>
 
@@ -703,6 +805,53 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
 
   <div class="pf-grid" id="pf-grid"></div>
   <div id="pf-corrections-slot"></div>
+
+  <div class="pf-futures-wrap">
+    <div class="pf-futures-header">
+      <div class="pf-section-title">Posisi Futures</div>
+    </div>
+    <div class="pf-add-coin-wrap">
+      <button class="pf-add-coin-btn" onclick="toggleAddFutures()">+ Tambah posisi futures</button>
+      <div class="pf-add-coin-panel" id="pf-futures-add-panel">
+        <div class="pf-add-form wide-coin" id="pf-futures-add-form">
+          <div>
+            <label>Simbol (mis. BTC)</label>
+            <input id="fp-symbol" type="text" placeholder="BTC" />
+          </div>
+          <div>
+            <label>CoinGecko ID (opsional)</label>
+            <input id="fp-geckoid" type="text" placeholder="bitcoin" />
+          </div>
+          <div>
+            <label>Posisi</label>
+            <select id="fp-side">
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+          </div>
+          <div>
+            <label>Leverage (x)</label>
+            <input id="fp-leverage" type="number" step="any" placeholder="10" />
+          </div>
+          <div>
+            <label>Harga entry ($)</label>
+            <input id="fp-entry" type="number" step="any" placeholder="65000" />
+          </div>
+          <div>
+            <label>Margin dipakai ($)</label>
+            <input id="fp-margin" type="number" step="any" placeholder="500" />
+          </div>
+          <div class="full">
+            <label>Tanggal (dd/mm/yy)</label>
+            <input id="fp-date" type="text" placeholder="19/09/26" />
+          </div>
+          <div class="pf-add-err" id="fp-err"></div>
+          <button class="pf-add-submit full" onclick="submitFutures()">Tambah posisi</button>
+        </div>
+      </div>
+    </div>
+    <div class="pf-grid" id="pf-futures-grid"></div>
+  </div>
 
   <div class="pf-footnote">Harga live dari CoinGecko, semua kolom bisa diedit manual · catat beli & jual langsung dari sini, tersimpan di browser HP/laptop kamu · dibuat 14 Sep 2026</div>
 </div>
@@ -783,6 +932,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   const SELLS = {};        // { SYM: [ [date, price, qty], ... ] }
   const SEED_EDITS = {};   // { SYM: { origIdx: [date, price, qty, modal] } } — overrides for the built-in seed rows
   const SEED_DELETED = {}; // { SYM: [origIdx, ...] } — built-in seed rows the user removed
+  const FUTURES = [];      // [{ id, symbol, geckoId, side, entry, leverage, margin, date, closed, exitPrice, closeDate }]
 
   function parseDMY(str) {
     // "14/09/26" or "14/09/2026" -> sortable Date. 2-digit year -> 2000+yy.
@@ -800,7 +950,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   Object.keys(HOLDINGS).forEach(sym => { manualPrice[sym] = null; });
   const fetchFailed = {};
 
-  const state = { openCard: null, addFormOpen: {}, sellFormOpen: {}, editingLot: {}, pendingDelete: null, sortMode: 'value' };
+  const state = { openCard: null, addFormOpen: {}, sellFormOpen: {}, editingLot: {}, pendingDelete: null, sortMode: 'value', futCloseOpen: null };
 
   function allSymbols() {
     return Object.keys(HOLDINGS).concat(Object.keys(CUSTOM_COINS).filter(s => !HOLDINGS[s]));
@@ -860,6 +1010,168 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     catch (e) { /* not persisted this session */ }
   }
 
+  // ---------- Cloud sync (optional) ----------
+  // User pastes their own free Firebase project config + picks a private sync
+  // code. Everything below reads/writes one JSON blob at portfolios/{code}.
+  // No auth — the sync code IS the access control, so keep it private.
+  let cloudDb = null;
+  let cloudCode = null;
+  let cloudSyncTimer = null;
+
+  function getFullState() {
+    return {
+      addedLots: ADDED_LOTS,
+      customCoins: CUSTOM_COINS,
+      sells: SELLS,
+      seedEdits: SEED_EDITS,
+      seedDeleted: SEED_DELETED,
+      futures: FUTURES,
+      manualPrices: manualPrice,
+    };
+  }
+  function applyFullState(s) {
+    if (!s || typeof s !== 'object') return;
+    if (s.addedLots) Object.keys(s.addedLots).forEach(k => { ADDED_LOTS[k] = s.addedLots[k]; });
+    if (s.customCoins) Object.keys(s.customCoins).forEach(k => { CUSTOM_COINS[k] = s.customCoins[k]; });
+    if (s.sells) Object.keys(s.sells).forEach(k => { SELLS[k] = s.sells[k]; });
+    if (s.seedEdits) Object.keys(s.seedEdits).forEach(k => { SEED_EDITS[k] = s.seedEdits[k]; });
+    if (s.seedDeleted) Object.keys(s.seedDeleted).forEach(k => { SEED_DELETED[k] = s.seedDeleted[k]; });
+    if (Array.isArray(s.futures)) { FUTURES.length = 0; FUTURES.push(...s.futures); }
+    if (s.manualPrices) Object.keys(s.manualPrices).forEach(k => { manualPrice[k] = s.manualPrices[k]; });
+  }
+
+  function loadCloudConfig() {
+    const raw = lsGet('cloud-config');
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  function initFirebaseFromConfig(cfg) {
+    try {
+      if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(cfg);
+      cloudDb = firebase.firestore();
+      return true;
+    } catch (e) {
+      cloudDb = null;
+      return false;
+    }
+  }
+
+  async function cloudPull() {
+    if (!cloudDb || !cloudCode) return false;
+    try {
+      const doc = await cloudDb.collection('portfolios').doc(cloudCode).get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && data.json) {
+          applyFullState(JSON.parse(data.json));
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+  async function cloudPush() {
+    if (!cloudDb || !cloudCode) return;
+    try {
+      await cloudDb.collection('portfolios').doc(cloudCode).set({
+        json: JSON.stringify(getFullState()),
+        updatedAt: Date.now(),
+      });
+    } catch (e) { /* offline or rules issue — local copy is still safe */ }
+  }
+  function scheduleCloudSync() {
+    if (!cloudDb) return;
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(cloudPush, 900);
+  }
+
+  function updateCloudButtonLabel() {
+    const btn = document.getElementById('pf-cloud-toggle-btn');
+    const disc = document.getElementById('cloud-disconnect-btn');
+    if (!btn) return;
+    if (cloudDb && cloudCode) {
+      btn.textContent = '☁️ Cloud tersambung — kode: ' + cloudCode;
+      if (disc) disc.style.display = 'block';
+    } else {
+      btn.textContent = '☁️ Sinkronisasi Cloud — belum disambungkan';
+      if (disc) disc.style.display = 'none';
+    }
+  }
+
+  window.toggleCloudPanel = function () {
+    document.getElementById('pf-cloud-panel').classList.toggle('show');
+  };
+
+  window.submitCloudConfig = async function () {
+    const cfgEl = document.getElementById('cloud-config');
+    const codeEl = document.getElementById('cloud-code');
+    const errEl = document.getElementById('cloud-err');
+    const code = codeEl.value.trim();
+    let cfg;
+    const raw = cfgEl.value.trim();
+    try {
+      cfg = JSON.parse(raw);
+    } catch (e1) {
+      // Firebase Console gives a plain JS object literal (unquoted keys),
+      // not strict JSON — accept that shape too.
+      try {
+        cfg = Function('"use strict"; return (' + raw + ')')();
+        if (!cfg || typeof cfg !== 'object') throw new Error('not an object');
+      } catch (e2) {
+        errEl.textContent = 'Config-nya nggak kebaca — pastikan kamu paste seluruh objek {...} (dari "const firebaseConfig = {...}") dari Firebase Console.';
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+    if (!code) {
+      errEl.textContent = 'Isi kode sinkronisasi dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (typeof firebase === 'undefined') {
+      errEl.textContent = 'Firebase SDK belum siap — coba refresh halaman dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const ok = initFirebaseFromConfig(cfg);
+    if (!ok) {
+      errEl.textContent = 'Config-nya kelihatannya nggak valid — cek lagi dari Firebase Console.';
+      errEl.style.display = 'block';
+      return;
+    }
+    cloudCode = code;
+    errEl.style.display = 'none';
+    lsSet('cloud-config', JSON.stringify({ config: cfg, code }));
+    updateCloudButtonLabel();
+    document.getElementById('pf-cloud-panel').classList.remove('show');
+    // First connection: pull whatever's already there for this code (in case
+    // another device already synced), then push our current local state too.
+    const pulled = await cloudPull();
+    await cloudPush();
+    render();
+    if (pulled) pfRefresh();
+  };
+
+  window.disconnectCloud = function () {
+    cloudDb = null;
+    cloudCode = null;
+    lsSet('cloud-config', '');
+    updateCloudButtonLabel();
+  };
+
+  async function initCloudSync() {
+    const saved = loadCloudConfig();
+    if (!saved || !saved.config || !saved.code) return;
+    if (typeof firebase === 'undefined') return; // SDK failed to load (offline, blocked, etc.)
+    const ok = initFirebaseFromConfig(saved.config);
+    if (!ok) return;
+    cloudCode = saved.code;
+    updateCloudButtonLabel();
+    await cloudPull();
+  }
+
   async function loadSavedPrices() {
     const raw = lsGet('manual-prices');
     if (raw) {
@@ -871,6 +1183,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   }
   async function savePrices() {
     lsSet('manual-prices', JSON.stringify(manualPrice));
+    scheduleCloudSync();
   }
 
   async function loadExtras() {
@@ -879,19 +1192,22 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     const sells = lsGet('sells');
     const seedEdits = lsGet('seed-edits');
     const seedDeleted = lsGet('seed-deleted');
+    const futures = lsGet('futures-positions');
     try {
       if (lots) { const saved = JSON.parse(lots); Object.keys(saved).forEach(sym => { ADDED_LOTS[sym] = saved[sym]; }); }
       if (coins) { const saved = JSON.parse(coins); Object.keys(saved).forEach(sym => { CUSTOM_COINS[sym] = saved[sym]; }); }
       if (sells) { const saved = JSON.parse(sells); Object.keys(saved).forEach(sym => { SELLS[sym] = saved[sym]; }); }
       if (seedEdits) { const saved = JSON.parse(seedEdits); Object.keys(saved).forEach(sym => { SEED_EDITS[sym] = saved[sym]; }); }
       if (seedDeleted) { const saved = JSON.parse(seedDeleted); Object.keys(saved).forEach(sym => { SEED_DELETED[sym] = saved[sym]; }); }
+      if (futures) { const saved = JSON.parse(futures); if (Array.isArray(saved)) FUTURES.push(...saved); }
     } catch (e) { /* corrupted value — ignore */ }
   }
-  async function saveAddedLots() { lsSet('added-lots', JSON.stringify(ADDED_LOTS)); }
-  async function saveCustomCoins() { lsSet('custom-coins', JSON.stringify(CUSTOM_COINS)); }
-  async function saveSells() { lsSet('sells', JSON.stringify(SELLS)); }
-  async function saveSeedEdits() { lsSet('seed-edits', JSON.stringify(SEED_EDITS)); }
-  async function saveSeedDeleted() { lsSet('seed-deleted', JSON.stringify(SEED_DELETED)); }
+  async function saveAddedLots() { lsSet('added-lots', JSON.stringify(ADDED_LOTS)); scheduleCloudSync(); }
+  async function saveCustomCoins() { lsSet('custom-coins', JSON.stringify(CUSTOM_COINS)); scheduleCloudSync(); }
+  async function saveSells() { lsSet('sells', JSON.stringify(SELLS)); scheduleCloudSync(); }
+  async function saveSeedEdits() { lsSet('seed-edits', JSON.stringify(SEED_EDITS)); scheduleCloudSync(); }
+  async function saveSeedDeleted() { lsSet('seed-deleted', JSON.stringify(SEED_DELETED)); scheduleCloudSync(); }
+  async function saveFutures() { lsSet('futures-positions', JSON.stringify(FUTURES)); scheduleCloudSync(); }
 
   function fmtUsd(n, decimals) {
     if (decimals === undefined) decimals = 2;
@@ -981,6 +1297,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
 
   const coinImage = {};      // { SYM: logoUrl }
   const coinChange24h = {};  // { SYM: percent number }
+  const GID_PRICE = {};      // { geckoId: currentPrice } — shared cache, also used by futures
 
   async function fetchPrices() {
     const syms = allSymbols();
@@ -990,7 +1307,12 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
       if (!gid) return;
       (gidToSyms[gid] || (gidToSyms[gid] = [])).push(sym);
     });
-    const ids = Object.keys(gidToSyms).join(',');
+    // Futures positions can reference coins that aren't in the spot portfolio
+    // at all — fold their gecko IDs into the same single request.
+    const futGids = new Set();
+    FUTURES.forEach(p => { if (!p.closed && p.geckoId) futGids.add(p.geckoId); });
+    const allIds = new Set([...Object.keys(gidToSyms), ...futGids]);
+    const ids = [...allIds].join(',');
     if (!ids) return true;
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&price_change_percentage=24h';
 
@@ -1016,7 +1338,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     }
 
     const byId = {};
-    (data || []).forEach(row => { byId[row.id] = row; });
+    (data || []).forEach(row => { byId[row.id] = row; if (typeof row.current_price === 'number') GID_PRICE[row.id] = row.current_price; });
     let anyOk = false;
     Object.entries(gidToSyms).forEach(([gid, symList]) => {
       const row = byId[gid];
@@ -1172,7 +1494,97 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     } else {
       allocWrap.style.display = 'none';
     }
+
+    renderFutures();
   }
+
+  // ---------- Futures positions ----------
+  function futGetLivePrice(pos) {
+    const el = document.getElementById('fp-manual-' + pos.id);
+    if (el) {
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) return v;
+    }
+    if (pos.geckoId && typeof GID_PRICE[pos.geckoId] === 'number') return GID_PRICE[pos.geckoId];
+    return null;
+  }
+  function futCalc(pos, priceOverride) {
+    const notional = pos.margin * pos.leverage;
+    const qty = notional / pos.entry;
+    const liq = pos.side === 'long'
+      ? pos.entry * (1 - 1 / pos.leverage)
+      : pos.entry * (1 + 1 / pos.leverage);
+    let pnl = null, pnlPct = null, price = null;
+    if (pos.closed) {
+      price = pos.exitPrice;
+      pnl = pos.side === 'long' ? (pos.exitPrice - pos.entry) * qty : (pos.entry - pos.exitPrice) * qty;
+      pnlPct = (pnl / pos.margin) * 100;
+    } else {
+      price = priceOverride !== undefined ? priceOverride : futGetLivePrice(pos);
+      if (price !== null && !isNaN(price)) {
+        pnl = pos.side === 'long' ? (price - pos.entry) * qty : (pos.entry - price) * qty;
+        pnlPct = (pnl / pos.margin) * 100;
+      }
+    }
+    return { notional, qty, liq, price, pnl, pnlPct };
+  }
+
+  function renderFutures() {
+    const wrap = document.getElementById('pf-futures-grid');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const sorted = FUTURES.slice().sort((a, b) => (a.closed === b.closed ? 0 : a.closed ? 1 : -1));
+    sorted.forEach(pos => {
+      const c = futCalc(pos);
+      const hasPrice = c.price !== null && !isNaN(c.price);
+      const card = document.createElement('div');
+      card.className = 'pf-card' + (pos.closed ? ' futures-closed' : '');
+      const closeFormOpen = state.futCloseOpen && state.futCloseOpen === pos.id;
+      card.innerHTML = `
+        <div class="pf-card-top">
+          <div class="pf-card-id">
+            ${logoMarkup(pos.symbol)}
+            <div>
+              <div class="pf-coin-name">${pos.symbol}
+                <span class="pf-side-badge ${pos.side === 'long' ? 'pf-side-long' : 'pf-side-short'}">${pos.side}</span>
+                <span class="pf-lev-tag">${pos.leverage}x</span>
+              </div>
+              <div class="pf-coin-qty">entry ${fmtPrice(pos.entry)} · ${pos.date}${pos.closed ? ` · ditutup ${pos.closeDate}` : ''}</div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-card-row"><span>Margin</span><span class="val">${fmtUsd(pos.margin, 0)}</span></div>
+        <div class="pf-card-row"><span>Notional (size)</span><span class="val">${fmtUsd(c.notional, 0)}</span></div>
+        ${!pos.closed ? `<div class="pf-card-row pf-liq-row"><span>Liq. price (estimasi)</span><span class="val">${fmtPrice(c.liq)}</span></div>` : ''}
+        ${pos.closed
+          ? `<div class="pf-card-row"><span>Harga exit</span><span class="val">${fmtPrice(pos.exitPrice)}</span></div>`
+          : `<div class="pf-manual-price">
+              <label class="${pos.geckoId ? 'dim' : ''}">${pos.geckoId ? 'live · CoinGecko' : 'manual'}</label>
+              <input id="fp-manual-${pos.id}" type="number" step="any"
+                     value="${hasPrice ? c.price : ''}" placeholder="isi harga"
+                     oninput="renderFutures()" />
+            </div>`}
+        <div class="pf-pnl-line">
+          <span class="pf-pnl-amt ${c.pnl !== null ? (c.pnl >= 0 ? 'gain-txt' : 'loss-txt') : ''}">${c.pnl !== null ? (c.pnl >= 0 ? '+' : '') + fmtUsd(c.pnl, 0) : '—'}</span>
+          <span class="pf-pnl-pct ${c.pnl !== null ? (c.pnl >= 0 ? 'gain-bg' : 'loss-bg') : ''}">${c.pnlPct !== null ? (c.pnlPct >= 0 ? '+' : '') + c.pnlPct.toFixed(1) + '%' : '—'}</span>
+        </div>
+        ${!pos.closed ? `
+          <button class="pf-close-btn" onclick="toggleCloseFutures('${pos.id}')">${closeFormOpen ? '– batal' : 'Tutup posisi'}</button>
+          ${closeFormOpen ? `
+            <div class="pf-close-form">
+              <input id="fp-exit-${pos.id}" type="number" step="any" placeholder="harga exit" />
+              <input id="fp-exitdate-${pos.id}" type="text" placeholder="tgl (dd/mm/yy)" />
+              <div class="pf-add-err" id="fp-close-err-${pos.id}" style="grid-column:1/-1;"></div>
+              <button class="pf-add-submit" style="grid-column:1/-1;" onclick="submitCloseFutures('${pos.id}')">Konfirmasi tutup</button>
+            </div>
+          ` : ''}
+        ` : ''}
+        <button class="pf-del-coin" onclick="pfDeleteFutures('${pos.id}', this)">Hapus posisi</button>
+      `;
+      wrap.appendChild(card);
+    });
+  }
+  window.renderFutures = renderFutures;
 
   function buildDetailTable(sym) {
     const m = coinMeta(sym);
@@ -1543,6 +1955,85 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     if (val) pfRefresh();
   };
 
+  window.toggleAddFutures = function () {
+    document.getElementById('pf-futures-add-panel').classList.toggle('show');
+  };
+
+  window.submitFutures = async function () {
+    const symEl = document.getElementById('fp-symbol');
+    const gidEl = document.getElementById('fp-geckoid');
+    const sideEl = document.getElementById('fp-side');
+    const levEl = document.getElementById('fp-leverage');
+    const entryEl = document.getElementById('fp-entry');
+    const marginEl = document.getElementById('fp-margin');
+    const dateEl = document.getElementById('fp-date');
+    const errEl = document.getElementById('fp-err');
+    const symbol = symEl.value.trim().toUpperCase();
+    const gid = gidEl.value.trim();
+    const side = sideEl.value;
+    const leverage = parseFloat(levEl.value);
+    const entry = parseFloat(entryEl.value);
+    const margin = parseFloat(marginEl.value);
+    const date = dateEl.value.trim();
+    if (!symbol || !date || isNaN(leverage) || leverage <= 0 || isNaN(entry) || entry <= 0 || isNaN(margin) || margin <= 0) {
+      errEl.textContent = 'Isi simbol, tanggal, leverage, harga entry, dan margin yang valid dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    FUTURES.push({
+      id: 'fp' + Date.now() + Math.random().toString(36).slice(2, 7),
+      symbol, geckoId: gid || null, side, entry, leverage, margin, date,
+      closed: false, exitPrice: null, closeDate: null,
+    });
+    await saveFutures();
+    ['fp-symbol', 'fp-geckoid', 'fp-leverage', 'fp-entry', 'fp-margin', 'fp-date'].forEach(id => document.getElementById(id).value = '');
+    errEl.style.display = 'none';
+    document.getElementById('pf-futures-add-panel').classList.remove('show');
+    renderFutures();
+    pfRefresh();
+  };
+
+  window.toggleCloseFutures = function (id) {
+    state.futCloseOpen = state.futCloseOpen === id ? null : id;
+    renderFutures();
+  };
+
+  window.submitCloseFutures = async function (id) {
+    const pos = FUTURES.find(p => p.id === id);
+    if (!pos) return;
+    const exitEl = document.getElementById('fp-exit-' + id);
+    const dateEl = document.getElementById('fp-exitdate-' + id);
+    const errEl = document.getElementById('fp-close-err-' + id);
+    const exitPrice = parseFloat(exitEl.value);
+    const closeDate = dateEl.value.trim();
+    if (isNaN(exitPrice) || exitPrice <= 0 || !closeDate) {
+      errEl.textContent = 'Isi harga exit dan tanggal yang valid.';
+      errEl.style.display = 'block';
+      return;
+    }
+    pos.closed = true;
+    pos.exitPrice = exitPrice;
+    pos.closeDate = closeDate;
+    await saveFutures();
+    state.futCloseOpen = null;
+    renderFutures();
+  };
+
+  window.pfDeleteFutures = function (id, btn) {
+    const key = 'futdel:' + id;
+    if (state.pendingDelete !== key) {
+      state.pendingDelete = key;
+      btn.textContent = 'yakin hapus posisi ini? klik lagi';
+      setTimeout(() => { if (state.pendingDelete === key) state.pendingDelete = null; }, 3000);
+      return;
+    }
+    state.pendingDelete = null;
+    const idx = FUTURES.findIndex(p => p.id === id);
+    if (idx !== -1) FUTURES.splice(idx, 1);
+    saveFutures();
+    renderFutures();
+  };
+
   let saveTimer = null;
   window.pfManualChange = function (sym) {
     const el = document.getElementById('pf-manual-' + sym);
@@ -1590,7 +2081,8 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   }
 
   buildCorrections();
-  Promise.all([loadSavedPrices(), loadExtras()]).then(() => {
+  updateCloudButtonLabel();
+  Promise.all([loadSavedPrices(), loadExtras()]).then(() => initCloudSync()).then(() => {
     render();
     pfRefresh();
   });
