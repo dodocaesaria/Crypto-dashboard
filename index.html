@@ -1298,6 +1298,12 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   const coinImage = {};      // { SYM: logoUrl }
   const coinChange24h = {};  // { SYM: percent number }
   const GID_PRICE = {};      // { geckoId: currentPrice } — shared cache, also used by futures
+  const LIVE_PRICE = {};     // { SYM: latest fetched price } — always refreshed on every successful fetch.
+                              // Kept separate from manualPrice, which is ONLY ever set by the user
+                              // typing in the price box; without this split, the first fetched price
+                              // would get written into manualPrice and then permanently block every
+                              // later refresh (the old "only fill if empty" guard treated it as if
+                              // the user had typed it).
 
   async function fetchPrices() {
     const syms = allSymbols();
@@ -1348,11 +1354,7 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
           anyOk = true;
           coinImage[sym] = row.image || null;
           coinChange24h[sym] = typeof row.price_change_percentage_24h === 'number' ? row.price_change_percentage_24h : null;
-          // only overwrite the input if the user hasn't typed a custom value yet,
-          // so we never clobber someone's manual correction.
-          if (manualPrice[sym] === null || manualPrice[sym] === undefined) {
-            manualPrice[sym] = row.current_price;
-          }
+          LIVE_PRICE[sym] = row.current_price; // always refresh — never gated by manualPrice
         } else {
           fetchFailed[sym] = true;
         }
@@ -1367,7 +1369,10 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
       const v = parseFloat(el.value);
       if (!isNaN(v)) return v;
     }
-    return manualPrice[sym];
+    // An explicit user override (typed once, field left non-empty) always wins;
+    // otherwise fall back to the latest live-fetched price for this coin.
+    if (manualPrice[sym] !== null && manualPrice[sym] !== undefined) return manualPrice[sym];
+    return LIVE_PRICE[sym] !== undefined ? LIVE_PRICE[sym] : null;
   }
 
   window.setSortMode = function (mode) {
