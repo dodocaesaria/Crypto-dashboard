@@ -54,6 +54,8 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 #pf-root .pf-refresh-btn {
   background: var(--surface-2);
@@ -715,6 +717,9 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
       <button class="pf-refresh-btn" id="pf-refresh-btn" onclick="pfRefresh()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         refresh
+      </button>
+      <button class="pf-refresh-btn" id="pf-reset-manual-btn" onclick="resetAllManualPrices()" title="Bersihkan harga manual yang nyangkut supaya semua coin balik ke live price">
+        bersihin harga manual
       </button>
     </div>
   </div>
@@ -2064,6 +2069,24 @@ body { margin: 0; background: #0b0d12; padding: 24px 12px; }
     }
     btn.classList.remove('spinning');
     render();
+  };
+
+  window.resetAllManualPrices = async function () {
+    // Clears any manual-override price for coins that actually have a
+    // CoinGecko ID (so they go back to pure live tracking). Coins with no
+    // geckoId at all (like PONS) are left alone — they need a manual price
+    // by design, there's nothing to "reset" them to.
+    let cleared = 0;
+    allSymbols().forEach(sym => {
+      if (coinMeta(sym).geckoId && manualPrice[sym] !== null && manualPrice[sym] !== undefined) {
+        manualPrice[sym] = null;
+        cleared++;
+      }
+    });
+    await savePrices();
+    render();
+    document.getElementById('pf-sync-text').textContent = cleared + ' harga manual dibersihkan — refreshing…';
+    await pfRefresh();
   };
 
   function buildCorrections() {
